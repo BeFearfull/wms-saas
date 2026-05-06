@@ -1,20 +1,20 @@
 package com.wms.entity;
 
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
-/**
- * Sale Entity - Records sales transactions
- */
 @Entity
 @Table(name = "sales", indexes = {
-        @Index(name = "idx_sale_warehouse_id", columnList = "warehouse_id"),
-        @Index(name = "idx_sale_number", columnList = "sale_number")
+    @Index(name = "idx_warehouse_id", columnList = "warehouse_id"),
+    @Index(name = "idx_customer_id", columnList = "customer_id")
 })
 @Data
 @NoArgsConstructor
@@ -23,60 +23,73 @@ import java.time.LocalDateTime;
 public class Sale {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String saleNumber;
-
-    @Column(nullable = false)
-    private LocalDateTime saleDate;
-
-    @Column(nullable = false, length = 255)
-    private String customerName;
-
-    @Column(length = 20)
-    private String customerPhoneNumber;
-
-    @Column(length = 255)
-    private String productName;
-
-    @Column(nullable = false)
-    private Long quantity;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal unitPrice;
-
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal totalAmount;
-
-    @Column(precision = 12, scale = 2)
-    private BigDecimal discountAmount;
-
-    @Column(length = 50)
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private SaleStatus status = SaleStatus.COMPLETED;
-
-    @Column(length = 1000)
-    private String notes;
-
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = false)
     private Warehouse warehouse;
 
-    public enum SaleStatus {
-        PENDING,
-        COMPLETED,
-        CANCELLED,
-        RETURNED
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Company customer;
+
+    @Column(nullable = false, unique = true)
+    private String soNumber; // Sales Order Number
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SaleStatus status;
+
+    @Column(nullable = false)
+    private LocalDateTime orderDate;
+
+    @Column(nullable = false)
+    private LocalDateTime expectedDeliveryDate;
+
+    private LocalDateTime actualDeliveryDate;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal totalAmount;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal gstAmount;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal netAmount;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal paidAmount;
+
+    private String invoiceNumber;
+    private LocalDateTime invoiceDate;
+
+    private String transporterName;
+    private String transporterPhone;
+    private String awbNumber;
+
+    private String notes;
+
+    @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<SaleItem> items;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (status == null) {
+            status = SaleStatus.PENDING;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

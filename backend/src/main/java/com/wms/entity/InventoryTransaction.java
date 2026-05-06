@@ -1,22 +1,20 @@
 package com.wms.entity;
 
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-/**
- * InventoryTransaction Entity - Tracks all stock movements
- * Critical for audit trail and accurate inventory management
- * Supports +50 (purchase), -10 (sale), -5 (damage), +20 (returned) patterns
- */
 @Entity
 @Table(name = "inventory_transactions", indexes = {
-        @Index(name = "idx_inv_trans_warehouse_id", columnList = "warehouse_id"),
-        @Index(name = "idx_inv_trans_product_id", columnList = "product_id"),
-        @Index(name = "idx_inv_trans_type", columnList = "transaction_type"),
-        @Index(name = "idx_inv_trans_created_at", columnList = "created_at")
+    @Index(name = "idx_warehouse_id", columnList = "warehouse_id"),
+    @Index(name = "idx_product_id", columnList = "product_id"),
+    @Index(name = "idx_transaction_date", columnList = "transaction_date")
 })
 @Data
 @NoArgsConstructor
@@ -25,60 +23,59 @@ import java.time.LocalDateTime;
 public class InventoryTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(nullable = false, length = 50)
-    @Enumerated(EnumType.STRING)
-    private TransactionType transactionType;
-
-    @Column(nullable = false)
-    private Long quantity;
-
-    @Column(nullable = false)
-    private Long quantityBefore;
-
-    @Column(nullable = false)
-    private Long quantityAfter;
-
-    @Column(length = 500)
-    private String reason;
-
-    @Column(length = 500)
-    private String reference;
-
-    @Column(length = 255)
-    private String createdBy;
-
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = false)
     private Warehouse warehouse;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    public enum TransactionType {
-        PURCHASE("Purchase"),
-        SALE("Sale"),
-        RETURN("Return"),
-        DAMAGE("Damage"),
-        ADJUSTMENT("Adjustment"),
-        TRANSFER("Transfer"),
-        STOCK_TAKE("Stock Take");
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TransactionType type; // PURCHASE, SALE, ADJUSTMENT, DAMAGE, RETURN, WASTE
 
-        private final String label;
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal quantity;
 
-        TransactionType(String label) {
-            this.label = label;
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal unitPrice;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal totalAmount;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal stockBefore;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal stockAfter;
+
+    private String referenceNumber; // Purchase order, sales order, etc.
+    private String notes;
+
+    @Column(nullable = false)
+    private LocalDateTime transactionDate;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (transactionDate == null) {
+            transactionDate = LocalDateTime.now();
         }
+    }
 
-        public String getLabel() {
-            return label;
-        }
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

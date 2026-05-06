@@ -1,23 +1,20 @@
 package com.wms.entity;
 
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.UUID;
 
-/**
- * Product Entity - Represents items stored in warehouse
- * Each product belongs to a company/supplier
- */
 @Entity
 @Table(name = "products", indexes = {
-        @Index(name = "idx_product_company_id", columnList = "company_id"),
-        @Index(name = "idx_product_sku", columnList = "sku")
+    @Index(name = "idx_warehouse_id", columnList = "warehouse_id"),
+    @Index(name = "idx_company_id", columnList = "company_id")
 })
 @Data
 @NoArgsConstructor
@@ -26,69 +23,72 @@ import java.util.Set;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(nullable = false, length = 255)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id", nullable = false)
+    private Warehouse warehouse;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String sku;
-
-    @Column(length = 100)
-    private String category;
-
-    @Column(length = 1000)
-    private String description;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal purchasePrice;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal sellingPrice;
-
-    @Column(nullable = false, length = 50)
-    private String unitType; // kg, bag, piece, carton, etc.
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Long currentStock = 0L;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Long minStockLevel = 10L;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Long maxStockLevel = 1000L;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Double reorderPoint = 50.0;
-
-    @Column(length = 255)
-    private String barcode;
-
-    @Column(length = 500)
-    private String imageUrl;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean active = true;
-
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<InventoryTransaction> inventoryTransactions = new HashSet<>();
+    @Column(nullable = false)
+    private String name;
+
+    private String description;
+    private String sku;
+    private String barcode;
+
+    @Column(nullable = false)
+    private String category;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UnitType unit;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal pricePerUnit;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal currentStock;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal minimumStockLevel;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal maximumStockLevel;
+
+    private String imageUrl;
+
+    private String hsn;
+    private BigDecimal gstRate;
+
+    @Column(nullable = false)
+    private Boolean active;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<InventoryTransaction> transactions;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        active = true;
+        if (currentStock == null) {
+            currentStock = BigDecimal.ZERO;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

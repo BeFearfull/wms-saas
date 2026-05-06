@@ -1,120 +1,120 @@
 package com.wms.entity;
 
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
-/**
- * User Entity - Represents a warehouse owner/manager
- * Each user can have multiple warehouses in the system
- */
 @Entity
-@Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "email")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_email", columnList = "email"),
+    @Index(name = "idx_phone", columnList = "phone")
 })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(nullable = false, length = 255)
-    private String firstName;
-
-    @Column(nullable = false, length = 255)
-    private String lastName;
-
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(length = 255)
+    @Column(unique = true)
+    private String phone;
+
+    private String firstName;
+    private String lastName;
+
+    @Column(nullable = false)
     private String password;
 
-    @Column(length = 20)
-    private String phoneNumber;
+    private String profileImage;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private UserRole role;
+
+    @Column(nullable = false)
+    private Boolean emailVerified;
+
+    @Column(nullable = false)
+    private Boolean phoneVerified;
+
+    @Column(nullable = false)
+    private Boolean active;
+
+    @Enumerated(EnumType.STRING)
     private AuthProvider authProvider;
 
-    @Column(length = 500)
-    private String profileImageUrl;
+    private String providerId;
 
-    @Column(nullable = false)
-    private Boolean enabled = true;
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Warehouse> warehouses;
 
-    @Column(nullable = false)
-    private Boolean emailVerified = false;
-
-    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Warehouse> warehouses = new HashSet<>();
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private UserRole role = UserRole.WAREHOUSE_OWNER;
-
-    @Column(length = 1000)
-    private String address;
-
-    @Column(length = 100)
-    private String city;
-
-    @Column(length = 100)
-    private String state;
-
-    @Column(length = 10)
-    private String zipCode;
-
-    @Column(length = 50)
-    private String country;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private String timezone = "Asia/Kolkata";
-
-    @Column(nullable = false)
-    @Builder.Default
-    private String currency = "INR";
-
-    public enum AuthProvider {
-        LOCAL,
-        GOOGLE,
-        FACEBOOK
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        emailVerified = false;
+        phoneVerified = false;
+        active = true;
     }
 
-    public enum UserRole {
-        WAREHOUSE_OWNER,
-        WAREHOUSE_MANAGER,
-        WAREHOUSE_STAFF,
-        ADMIN
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
-    public void addWarehouse(Warehouse warehouse) {
-        warehouses.add(warehouse);
-        warehouse.setUser(this);
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
-    public void removeWarehouse(Warehouse warehouse) {
-        warehouses.remove(warehouse);
-        warehouse.setUser(null);
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return active;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return active && emailVerified;
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
     }
 }

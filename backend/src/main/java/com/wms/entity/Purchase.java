@@ -1,21 +1,20 @@
 package com.wms.entity;
 
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
-/**
- * Purchase Entity - Records purchase orders from suppliers
- */
 @Entity
 @Table(name = "purchases", indexes = {
-        @Index(name = "idx_purchase_warehouse_id", columnList = "warehouse_id"),
-        @Index(name = "idx_purchase_company_id", columnList = "company_id"),
-        @Index(name = "idx_purchase_number", columnList = "purchase_number")
+    @Index(name = "idx_warehouse_id", columnList = "warehouse_id"),
+    @Index(name = "idx_supplier_id", columnList = "supplier_id")
 })
 @Data
 @NoArgsConstructor
@@ -24,60 +23,74 @@ import java.time.LocalDateTime;
 public class Purchase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String purchaseNumber;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id", nullable = false)
+    private Warehouse warehouse;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private Company supplier;
+
+    @Column(nullable = false, unique = true)
+    private String poNumber; // Purchase Order Number
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PurchaseStatus status;
 
     @Column(nullable = false)
-    private LocalDateTime purchaseDate;
+    private LocalDateTime orderDate;
 
     @Column(nullable = false)
     private LocalDateTime expectedDeliveryDate;
 
-    @Column(length = 50)
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private PurchaseStatus status = PurchaseStatus.PENDING;
+    private LocalDateTime actualDeliveryDate;
 
-    @Column(length = 255)
-    private String productName;
-
-    @Column(nullable = false)
-    private Long quantity;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal unitPrice;
-
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal totalAmount;
 
-    @Column(length = 1000)
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal gstAmount;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal netAmount;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal paidAmount;
+
+    private String invoiceNumber;
+    private LocalDateTime invoiceDate;
+
+    private String transporterName;
+    private String transporterPhone;
+    private String transporterAddress;
+    private String awbNumber; // Air Waybill Number
+
     private String notes;
 
-    @CreationTimestamp
+    @OneToMany(mappedBy = "purchase", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<PurchaseItem> items;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "warehouse_id", nullable = false)
-    private Warehouse warehouse;
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (status == null) {
+            status = PurchaseStatus.PENDING;
+        }
+    }
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
-
-    public enum PurchaseStatus {
-        PENDING,
-        CONFIRMED,
-        SHIPPED,
-        DELIVERED,
-        CANCELLED,
-        PARTIAL
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

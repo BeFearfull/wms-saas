@@ -1,0 +1,13 @@
+package com.wms.entity;
+
+public enum NotificationType {
+    DELIVERY_UPDATE,
+    DELAYED_DELIVERY,
+    INCOMING_STOCK,
+    OUTGOING_STOCK,
+    LOW_STOCK_ALERT,
+    ORDER_CONFIRMATION,
+    PAYMENT_RECEIVED,
+    INVOICE_GENERATED,
+    SYSTEM_ALERT
+}

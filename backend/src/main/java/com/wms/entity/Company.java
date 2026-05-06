@@ -1,22 +1,18 @@
 package com.wms.entity;
 
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.UUID;
 
-/**
- * Company Entity - Represents suppliers and vendors
- * Each warehouse has multiple companies/suppliers
- */
 @Entity
 @Table(name = "companies", indexes = {
-        @Index(name = "idx_company_warehouse_id", columnList = "warehouse_id"),
-        @Index(name = "idx_company_code", columnList = "code")
+    @Index(name = "idx_warehouse_id", columnList = "warehouse_id")
 })
 @Data
 @NoArgsConstructor
@@ -25,91 +21,68 @@ import java.util.Set;
 public class Company {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(nullable = false, length = 255)
-    private String name;
-
-    @Column(nullable = false, unique = true, length = 50)
-    private String code;
-
-    @Column(nullable = false, length = 50)
-    @Enumerated(EnumType.STRING)
-    private CompanyType type;
-
-    @Column(nullable = false, length = 500)
-    private String address;
-
-    @Column(nullable = false, length = 100)
-    private String city;
-
-    @Column(nullable = false, length = 100)
-    private String state;
-
-    @Column(nullable = false, length = 10)
-    private String zipCode;
-
-    @Column(length = 50)
-    private String country;
-
-    @Column(nullable = false, length = 20)
-    private String phoneNumber;
-
-    @Column(length = 255)
-    private String email;
-
-    @Column(length = 255)
-    private String contactPerson;
-
-    @Column(length = 20)
-    private String gstNumber;
-
-    @Column(length = 50)
-    private String panNumber;
-
-    @Column(length = 500)
-    private String bankDetails;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean active = true;
-
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = false)
     private Warehouse warehouse;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Product> products = new HashSet<>();
+    @Column(nullable = false)
+    private String name;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Purchase> purchases = new HashSet<>();
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CompanyType type; // SUPPLIER or CUSTOMER
 
-    public enum CompanyType {
-        SUPPLIER,
-        VENDOR,
-        DISTRIBUTOR,
-        MANUFACTURER,
-        OTHER
+    private String contactPerson;
+    private String email;
+    private String phone;
+
+    private String address;
+    private String city;
+    private String state;
+    private String pincode;
+
+    private String gstin;
+    private String panNumber;
+
+    @Column(nullable = false)
+    private String sourceLocation;
+
+    private String bankAccountNumber;
+    private String ifscCode;
+    private String bankName;
+
+    private String notes;
+
+    @Column(nullable = false)
+    private Boolean active;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Product> products;
+
+    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Purchase> purchases;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Sale> sales;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        active = true;
     }
 
-    public void addProduct(Product product) {
-        products.add(product);
-        product.setCompany(this);
-    }
-
-    public void removeProduct(Product product) {
-        products.remove(product);
-        product.setCompany(null);
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
