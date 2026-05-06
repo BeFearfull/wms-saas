@@ -1,70 +1,57 @@
-# IDE
+# Java/Maven
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+target/
+.mvn/
+MVNW*
+
+# IDEs
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 .DS_Store
+*.iml
 
-# Backend
-backend/target/
-backend/.classpath
-backend/.project
-backend/.settings/
-backend/*.iml
-backend/out/
-backend/build/
-backend/.gradle/
+# Spring Boot
+bin/
+.gradle/
+build/
 
-# Frontend
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/build/
-frontend/dist/
-frontend/.env.local
-frontend/.env.*.local
+# Node/NPM
+node_modules/
+npm-debug.log
+yarn-error.log
+.next/
+dist/
+build/
 
 # Environment
 .env
 .env.local
 .env.*.local
-.env.development
-.env.production
+
+# Databases
+*.db
+*.sqlite
 
 # Logs
-logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Dependencies
-node_modules/
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-
-# Misc
-.cache
-*.pem
-*.orig
-
-# Docker
-.dockerignore
+logs/
 
 # OS
 Thumbs.db
 .DS_Store
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Package Manager
-package-lock.json
-yarn.lock
-pom.xml.versionsBackup
+# Security
+*.pem
+*.key
+*.p12
+credentials.json
