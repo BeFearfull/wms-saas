@@ -1,157 +1,101 @@
-# WMS SaaS - Warehouse Management System
+# Warehouse Management System (WMS) - SaaS Platform
 
-A production-ready multi-tenant SaaS Warehouse Management System designed for Indian small-to-medium warehouses.
+## Production-Ready Multi-Tenant Cloud Architecture
 
-## 🏗️ Architecture Overview
+A comprehensive Warehouse Management System built for Indian small-to-medium businesses with complete inventory, sales, purchases, and delivery tracking.
 
-```
-┌─────────────────────────────────────┐
-│        React.js Frontend            │
-│    (Protected Routes, Auth State)    │
-└──────────────┬──────────────────────┘
-               │ REST APIs (Axios)
-┌──────────────▼──────────────────────┐
-│     Spring Boot Backend              │
-│  (JWT, Role-based Authorization)     │
-└──────────────┬──────────────────────┘
-               │ JPA/Hibernate
-┌──────────────▼──────────────────────┐
-│     PostgreSQL Database              │
-│   (Multi-tenant, Isolated Data)      │
-└─────────────────────────────────────┘
-```
-
-## 📋 Features
-
-### Authentication
-- Email/Password login & signup
-- Google OAuth integration
-- JWT-based authentication
-- Phone number validation (Indian format)
-- Secure password hashing with bcrypt
-
-### Multi-Tenant SaaS
-- Complete data isolation per user
-- Warehouse-level segregation
-- Secure API authorization
-
-### Inventory Management
-- Transaction-based stock tracking
-- Company/Supplier management
-- Product management with categories
-- Stock movement history
-- Low stock alerts
-
-### Sales & Purchase
-- Purchase order management
-- Sales tracking
-- Delivery management (Incoming & Outgoing)
-- Order status tracking
-
-### Dashboard
-- Real-time inventory analytics
-- Sales trends
-- Purchase analytics
-- Top products
-- Profit/Loss calculations
-
-### Notifications
-- Email notifications
-- SMS notification structure
-- Delivery updates
-- Stock alerts
-
-## 🛠️ Tech Stack
+### Tech Stack
 
 **Backend:**
+- Java 17
 - Spring Boot 3.x
-- Spring Security
-- Spring Data JPA
-- Hibernate
-- JWT (io.jsonwebtoken)
+- Spring Security + JWT
+- Spring Data JPA/Hibernate
 - PostgreSQL/MySQL
-- Lombok
-- MapStruct
-- Springdoc OpenAPI (Swagger)
+- Maven
 
 **Frontend:**
-- React.js 18+
-- React Router v6
-- Redux Toolkit (State Management)
-- Axios (HTTP Client)
-- React Query (Data Fetching)
-- TailwindCSS (Styling)
-- Recharts (Analytics)
-- React Hook Form (Forms)
+- React 18
+- Axios for API calls
+- React Router for navigation
+- Tailwind CSS for styling
+- Chart.js for analytics
+- Redux for state management
 
-**DevOps:**
+**DevOps & Cloud:**
 - Docker & Docker Compose
-- GitHub Actions (CI/CD)
 - AWS/Azure ready
+- Environment-based configuration
+- CI/CD pipeline ready
 
-## 📁 Project Structure
+### Key Features
+
+✅ Multi-Tenant SaaS Architecture
+✅ Complete Authentication (Email/Password + Google OAuth)
+✅ Warehouse Management Setup Wizard
+✅ Inventory Transaction Tracking
+✅ Sales & Purchase Management
+✅ Delivery Tracking (Incoming/Outgoing)
+✅ Analytics Dashboard
+✅ Role-Based Access Control
+✅ Notification System (Email/SMS ready)
+✅ Production-Level Security
+✅ RESTful API
+✅ Responsive UI
+
+### Project Structure
 
 ```
 wms-saas/
-├── backend/
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/wms/
-│   │   │   │   ├── config/          # Configuration classes
-│   │   │   │   ├── controller/      # REST Controllers
-│   │   │   │   ├── service/         # Business logic
-│   │   │   │   ├── repository/      # Data access layer
-│   │   │   │   ├── entity/          # JPA Entities
-│   │   │   │   ├── dto/             # Data Transfer Objects
-│   │   │   │   ├── security/        # JWT, Security configs
-│   │   │   │   ├── exception/       # Custom exceptions
-│   │   │   │   ├── mapper/          # Entity to DTO mappers
-│   │   │   │   └── WmsApplication.java
-│   │   │   └── resources/
-│   │   │       ├── application.yml
-│   │   │       ├── application-dev.yml
-│   │   │       ├── application-prod.yml
-│   │   │       └── db/migration/    # Liquibase/Flyway migrations
-│   │   └── test/
+├── backend/                    # Spring Boot Application
+│   ├── src/main/java/
+│   │   └── com/wms/
+│   │       ├── config/         # Configuration classes
+│   │       ├── controller/     # REST Controllers
+│   │       ├── dto/            # Data Transfer Objects
+│   │       ├── entity/         # JPA Entities
+│   │       ├── exception/      # Custom Exceptions
+│   │       ├── repository/     # Spring Data Repositories
+│   │       ├── service/        # Business Logic
+│   │       ├── security/       # JWT & Security utilities
+│   │       ├── validation/     # Input Validators
+│   │       └── WmsApplication.java
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│   │   ├── application-dev.yml
+│   │   ├── application-prod.yml
+│   │   └── db/migration/      # Flyway migrations (optional)
 │   ├── pom.xml
 │   └── Dockerfile
-│
-├── frontend/
-│   ├── src/
-│   │   ├── pages/               # Page components
-│   │   ├── components/          # Reusable components
-│   │   ├── store/               # Redux store
-│   │   ├── services/            # API services
-│   │   ├── utils/               # Utility functions
-│   │   ├── hooks/               # Custom hooks
-│   │   ├── types/               # TypeScript types
-│   │   ├── styles/              # Global styles
-│   │   └── App.jsx
+├── frontend/                   # React Application
 │   ├── public/
+│   ├── src/
+│   │   ├── components/        # Reusable components
+│   │   ├── pages/            # Page components
+│   │   ├── services/         # API services
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── context/          # React Context for auth
+│   │   ├── utils/            # Utility functions
+│   │   ├── App.jsx
+│   │   └── index.jsx
 │   ├── package.json
-│   └── Dockerfile
-│
+│   ├── Dockerfile
+│   └── .env.example
 ├── docker-compose.yml
-├── .github/
-│   └── workflows/
-│       ├── backend-ci.yml
-│       └── frontend-ci.yml
-└── docs/
-    ├── API.md
-    ├── DATABASE.md
-    ├── DEPLOYMENT.md
-    └── DEVELOPMENT.md
+├── .gitignore
+├── .env.example
+└── IMPLEMENTATION_GUIDE.md
 ```
 
-## 🚀 Quick Start
+### Quick Start
 
-### Prerequisites
+#### Prerequisites
 - Java 17+
-- Node.js 18+
+- Node.js 16+
 - PostgreSQL 13+
-- Git
+- Maven 3.8+
 
-### Backend Setup
+#### Backend Setup
 
 ```bash
 cd backend
@@ -159,9 +103,7 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-Backend runs on `http://localhost:8080`
-
-### Frontend Setup
+#### Frontend Setup
 
 ```bash
 cd frontend
@@ -169,162 +111,94 @@ npm install
 npm start
 ```
 
-Frontend runs on `http://localhost:3000`
-
-### Docker Compose
+#### Using Docker
 
 ```bash
-docker-compose up
+docker-compose up -d
 ```
 
-Starts:
-- PostgreSQL on port 5432
-- Spring Boot on port 8080
-- React on port 3000
+### API Documentation
 
-## 🔐 Security Features
+All API endpoints are documented in the IMPLEMENTATION_GUIDE.md file.
 
-- JWT Token-based authentication
-- Role-based access control (RBAC)
-- Password hashing with bcrypt
-- CORS configuration
-- SQL injection prevention via parameterized queries
-- Input validation on all endpoints
-- Rate limiting structure
-- Secure environment variable handling
-- HTTPS ready for production
+**Base URL:** `http://localhost:8080/api/v1`
 
-## 💾 Database Schema
+#### Authentication Endpoints
+- `POST /auth/signup` - User registration
+- `POST /auth/login` - User login
+- `POST /auth/refresh` - Refresh JWT token
+- `POST /auth/google-login` - Google OAuth login
 
-### Core Entities
-- **User** - Authentication & multi-tenancy root
-- **Warehouse** - User's warehouse entity
-- **Company** - Suppliers/Vendors
+#### Warehouse Endpoints
+- `POST /warehouses` - Create warehouse
+- `GET /warehouses` - Get user's warehouse
+- `PUT /warehouses/{id}` - Update warehouse
+
+#### Inventory Endpoints
+- `GET /companies` - List suppliers
+- `POST /companies` - Add supplier
+- `GET /products` - List products
+- `POST /products` - Add product
+- `GET /inventory/transactions` - Inventory history
+
+#### Sales & Purchase
+- `POST /purchases` - Create purchase order
+- `POST /sales` - Create sales order
+- `GET /deliveries` - List deliveries
+
+### Database Schema
+
+Key entities:
+- **User** - Application users
+- **Warehouse** - User's warehouse
+- **Company** - Suppliers/Partners
 - **Product** - Inventory items
-- **InventoryTransaction** - Stock movement tracking
+- **InventoryTransaction** - Stock movements
 - **Purchase** - Purchase orders
-- **Sale** - Sales transactions
-- **Delivery** - Incoming/Outgoing deliveries
-- **Notification** - User notifications
+- **Sale** - Sales orders
+- **Delivery** - Delivery tracking
 
-## 📊 API Endpoints
+### Security Features
 
-### Authentication
-- `POST /api/v1/auth/register` - User signup
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/google` - Google OAuth
-- `POST /api/v1/auth/refresh` - Token refresh
+- JWT-based authentication
+- Role-Based Access Control (RBAC)
+- Multi-tenant data isolation
+- Password hashing with bcrypt
+- Input validation
+- SQL injection prevention
+- CORS configuration
+- Rate limiting
+- Environment-based secrets management
 
-### Warehouse
-- `GET /api/v1/warehouses` - List warehouses
-- `POST /api/v1/warehouses` - Create warehouse
-- `PUT /api/v1/warehouses/{id}` - Update warehouse
+### Deployment
 
-### Inventory
-- `GET /api/v1/companies` - List companies
-- `POST /api/v1/companies` - Create company
-- `GET /api/v1/products` - List products
-- `POST /api/v1/products` - Create product
-- `GET /api/v1/inventory/transactions` - Transaction history
+#### AWS Deployment
+1. Push Docker images to ECR
+2. Deploy using ECS or EKS
+3. Use RDS for PostgreSQL
+4. Configure CloudFront for CDN
 
-### Sales & Purchase
-- `POST /api/v1/purchases` - Create purchase
-- `POST /api/v1/sales` - Create sale
-- `GET /api/v1/deliveries` - List deliveries
-- `POST /api/v1/deliveries` - Create delivery
+#### Azure Deployment
+1. Use Azure Container Registry
+2. Deploy to App Service
+3. Use Azure Database for PostgreSQL
+4. Configure Azure CDN
 
-### Dashboard
-- `GET /api/v1/dashboard/stats` - Dashboard statistics
-- `GET /api/v1/dashboard/charts` - Chart data
+### Environment Variables
 
-## 🧪 Testing
+See `.env.example` for required variables.
 
-### Backend Tests
-```bash
-cd backend
-mvn test
-```
+### Contributing
 
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
+Follow the branch naming convention:
+- `feature/` - New features
+- `bugfix/` - Bug fixes
+- `hotfix/` - Production hotfixes
 
-## 📈 Scalability & Future Features
+### License
 
-The architecture supports future integrations:
-- Barcode/QR code scanning
-- Invoice generation with GST
-- AI-based inventory forecasting
-- Multi-warehouse management
-- Advanced reporting & BI
-- Mobile app (React Native)
-- Payment gateway integration
-- Webhook notifications
+Proprietray - All rights reserved
 
-## 🌍 Localization
+### Support
 
-- **Currency:** Indian Rupees (₹)
-- **Timezone:** IST (UTC+5:30)
-- **Language:** English
-- **Phone:** Indian format (+91 XXXXX XXXXX)
-
-## 📝 Environment Variables
-
-Create `.env` files:
-
-**backend/.env**
-```
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/wms_db
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=password
-JWT_SECRET=your-secret-key-min-32-chars
-JWT_EXPIRATION=86400000
-GOOGLE_CLIENT_ID=your-google-client-id
-```
-
-**frontend/.env**
-```
-REACT_APP_API_BASE_URL=http://localhost:8080/api/v1
-REACT_APP_GOOGLE_CLIENT_ID=your-google-client-id
-```
-
-## 🚢 Deployment
-
-### AWS
-- RDS for PostgreSQL
-- EC2 or ECS for backend
-- S3 + CloudFront for frontend
-- ALB for load balancing
-
-### Azure
-- Azure Database for PostgreSQL
-- App Service for backend
-- Static Web Apps for frontend
-- Application Gateway
-
-## 📚 Documentation
-
-- [API Documentation](docs/API.md)
-- [Database Schema](docs/DATABASE.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Development Setup](docs/DEVELOPMENT.md)
-
-## 📄 License
-
-MIT License - See LICENSE file
-
-## 🤝 Contributing
-
-See CONTRIBUTING.md for guidelines
-
-## 📞 Support
-
-For issues and questions, please create a GitHub issue.
-
----
-
-**Version:** 1.0.0  
-**Last Updated:** 2026-05-06  
-**Status:** Production Ready
+For issues and feature requests, please create an issue in the repository.

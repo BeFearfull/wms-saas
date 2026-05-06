@@ -1,4 +1,3 @@
-# Maven
 target/
 *.jar
 *.war
@@ -10,10 +9,6 @@ release.properties
 dependency-reduced-pom.xml
 .flattened-pom.xml
 *.class
-
-# Spring Boot
-.gradle
-build/
 .idea/
 *.iml
 *.iws
@@ -23,47 +18,16 @@ build/
 *.launch
 .settings/
 *.sublime-workspace
-
-# Node
-node_modules/
-npm-debug.log
-yarn-error.log
-.yarn/
-.pnp
-.pnp.js
+.gradle
 build/
-dist/
-.env.local
-.env.*.local
-
-# Environment
-.env
-.env.*.local
-.DS_Store
-*.pem
-*.key
-
-# IDEs
 .vscode/
-.idea/
 *.swp
 *.swo
 *~
 .project
 .pydevproject
-.settings/
-
-# OS
 .DS_Store
 Thumbs.db
-
-# Docker
-.dockerignore
-.docker/
-
-# Logs
-logs/
+.env
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+logs/
