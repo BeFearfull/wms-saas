@@ -1,120 +1,90 @@
 package com.wms.entity;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
+import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "users", indexes = {
-    @Index(name = "idx_email", columnList = "email"),
-    @Index(name = "idx_phone", columnList = "phone")
+@Table(name = "users", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "email"),
+    @UniqueConstraint(columnNames = "phone_number")
 })
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class User implements UserDetails {
-
+public class User {
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    @Column(unique = true)
-    private String phone;
-
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
     private String firstName;
+    
+    @Column(nullable = false)
     private String lastName;
-
+    
+    @Column(nullable = false, unique = true)
+    private String email;
+    
+    @Column(name = "phone_number", unique = true)
+    private String phoneNumber;
+    
     @Column(nullable = false)
     private String password;
-
-    private String profileImage;
-
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role;
-
-    @Column(nullable = false)
-    private Boolean emailVerified;
-
-    @Column(nullable = false)
-    private Boolean phoneVerified;
-
-    @Column(nullable = false)
-    private Boolean active;
-
-    @Enumerated(EnumType.STRING)
     private AuthProvider authProvider;
-
+    
+    @Column(name = "provider_id")
     private String providerId;
-
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Warehouse> warehouses;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
+    
     @Column(nullable = false)
+    @Builder.Default
+    private Boolean emailVerified = false;
+    
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+    
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean twoFactorEnabled = false;
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<Warehouse> warehouses = new HashSet<>();
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<Notification> notifications = new HashSet<>();
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
+    
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        emailVerified = false;
-        phoneVerified = false;
-        active = true;
     }
-
+    
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
-
-    @Override
-    public String getUsername() {
-        return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return active;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return active && emailVerified;
-    }
-
-    public String getFullName() {
-        return firstName + " " + lastName;
+    
+    public enum AuthProvider {
+        LOCAL, GOOGLE
     }
 }

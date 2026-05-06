@@ -1,91 +1,117 @@
 package com.wms.entity;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "warehouses", indexes = {
-    @Index(name = "idx_owner_id", columnList = "owner_id")
+    @Index(name = "idx_warehouse_user", columnList = "user_id"),
+    @Index(name = "idx_warehouse_code", columnList = "warehouse_code")
 })
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Warehouse {
-
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
-
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+    
     @Column(nullable = false)
     private String name;
-
-    private String description;
-
+    
+    @Column(name = "warehouse_code", unique = true, nullable = false)
+    private String warehouseCode;
+    
     @Column(nullable = false)
     private String location;
-
-    private String city;
-    private String state;
-    private String pincode;
-
+    
+    @Column(name = "warehouse_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private WarehouseType type;
-
-    private String contactPerson;
-    private String contactPhone;
-    private String contactEmail;
-
-    private Double area; // in square meters
-
+    
+    @Column(columnDefinition = "TEXT")
+    private String description;
+    
+    @Column(name = "manager_name")
+    private String managerName;
+    
+    @Column(name = "manager_phone")
+    private String managerPhone;
+    
+    @Column(name = "manager_email")
+    private String managerEmail;
+    
+    @Column(name = "total_capacity")
+    private Double totalCapacity;
+    
+    @Column(name = "capacity_unit")
+    private String capacityUnit;
+    
     @Column(nullable = false)
-    private Boolean active;
-
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Company> companies;
-
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Product> products;
-
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<InventoryTransaction> transactions;
-
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Purchase> purchases;
-
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Sale> sales;
-
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Delivery> deliveries;
-
-    @Column(nullable = false, updatable = false)
+    @Builder.Default
+    private Boolean active = true;
+    
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<Company> companies = new HashSet<>();
+    
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<InventoryTransaction> transactions = new HashSet<>();
+    
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<PurchaseOrder> purchaseOrders = new HashSet<>();
+    
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<SalesOrder> salesOrders = new HashSet<>();
+    
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<Delivery> deliveries = new HashSet<>();
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @Column(nullable = false)
+    
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        active = true;
     }
-
+    
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+    
+    public enum WarehouseType {
+        CATTLE_FEED("Cattle Feed"),
+        GROCERY("Grocery"),
+        ELECTRONICS("Electronics"),
+        MEDICAL("Medical"),
+        TEXTILE("Textile"),
+        FMCG("FMCG"),
+        GENERAL("General");
+        
+        private final String displayName;
+        
+        WarehouseType(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }
