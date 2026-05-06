@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: wms-postgres
+    environment:
+      POSTGRES_USER: wms_user
+      POSTGRES_PASSWORD: wms_password_secure
+      POSTGRES_DB: wms_db
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - wms-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wms_user -d wms_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service (Spring Boot)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wms-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/wms_db
+      SPRING_DATASOURCE_USERNAME: wms_user
+      SPRING_DATASOURCE_PASSWORD: wms_password_secure
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      JWT_SECRET: your_jwt_secret_key_change_in_production
+      JWT_EXPIRATION: 86400000
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - wms-network
+    restart: unless-stopped
+
+  # Frontend Service (React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wms-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8080/api
+      REACT_APP_GOOGLE_CLIENT_ID: your_google_client_id
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - wms-network
+    restart: unless-stopped
+
+networks:
+  wms-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
