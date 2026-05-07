@@ -1,119 +1,93 @@
 package com.wms.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import javax.persistence.*;
-import java.math.BigDecimal;
+import lombok.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "products", indexes = {
+    @Index(name = "idx_product_warehouse", columnList = "warehouse_id"),
     @Index(name = "idx_product_company", columnList = "company_id"),
-    @Index(name = "idx_product_sku", columnList = "sku")
+    @Index(name = "idx_product_name", columnList = "name")
 })
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Product {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id", nullable = false)
+    private Warehouse warehouse;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
-    
+
     @Column(nullable = false)
     private String name;
-    
-    @Column(name = "sku", unique = true, nullable = false)
-    private String sku;
-    
-    @Column(name = "category", nullable = false)
+
+    @Column(name = "product_category", nullable = false)
     private String category;
-    
-    @Column(name = "price_inr", nullable = false, precision = 10, scale = 2)
-    private BigDecimal priceInr;
-    
+
+    @Column(name = "price_inr", nullable = false)
+    private Double priceInINR; // Price in Indian Rupees
+
     @Column(name = "unit_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private UnitType unitType;
-    
+
     @Column(name = "current_stock", nullable = false)
-    @Builder.Default
-    private Long currentStock = 0L;
-    
+    private Double currentStock = 0.0;
+
     @Column(name = "minimum_stock_level")
-    @Builder.Default
-    private Long minimumStockLevel = 10L;
-    
+    private Double minimumStockLevel = 0.0;
+
     @Column(name = "maximum_stock_level")
-    private Long maximumStockLevel;
-    
+    private Double maximumStockLevel;
+
     @Column(name = "reorder_quantity")
-    private Long reorderQuantity;
-    
+    private Double reorderQuantity;
+
     @Column(columnDefinition = "TEXT")
     private String description;
-    
-    @Column(name = "image_url")
-    private String imageUrl;
-    
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean active = true;
-    
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<InventoryTransaction> transactions = new HashSet<>();
-    
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<PurchaseOrderItem> purchaseOrderItems = new HashSet<>();
-    
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<SalesOrderItem> salesOrderItems = new HashSet<>();
-    
+
+    @Column(name = "sku", unique = true)
+    private String sku;
+
+    @Column(name = "barcode")
+    private String barcode;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<InventoryTransaction> transactions = new HashSet<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-    
+
     public enum UnitType {
-        KG("Kilogram"),
-        BAG("Bag"),
-        PIECE("Piece"),
-        CARTON("Carton"),
-        LITER("Liter"),
-        BOX("Box"),
-        METER("Meter"),
-        UNIT("Unit"),
-        BUNDLE("Bundle");
-        
-        private final String displayName;
-        
-        UnitType(String displayName) {
-            this.displayName = displayName;
-        }
-        
-        public String getDisplayName() {
-            return displayName;
-        }
+        KG, GRAM, LITER, MILLILITER, PIECE, BAG, CARTON, BOX, DOZEN, BOTTLE, CAN, JAR, PACKET
     }
 }

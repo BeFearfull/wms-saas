@@ -1,90 +1,84 @@
 package com.wms.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import javax.persistence.*;
+import lombok.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users", uniqueConstraints = {
-    @UniqueConstraint(columnNames = "email"),
-    @UniqueConstraint(columnNames = "phone_number")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_email", columnList = "email", unique = true),
+    @Index(name = "idx_phone", columnList = "phone_number")
 })
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(nullable = false)
-    private String firstName;
-    
-    @Column(nullable = false)
-    private String lastName;
-    
+
     @Column(nullable = false, unique = true)
     private String email;
-    
+
     @Column(name = "phone_number", unique = true)
     private String phoneNumber;
-    
+
     @Column(nullable = false)
-    private String password;
-    
-    @Enumerated(EnumType.STRING)
+    private String firstName;
+
     @Column(nullable = false)
-    private AuthProvider authProvider;
-    
-    @Column(name = "provider_id")
-    private String providerId;
-    
+    private String lastName;
+
     @Column(nullable = false)
-    @Builder.Default
-    private Boolean emailVerified = false;
-    
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean active = true;
-    
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean twoFactorEnabled = false;
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<Warehouse> warehouses = new HashSet<>();
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<Notification> notifications = new HashSet<>();
-    
+    private String passwordHash;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @Column(name = "is_email_verified", nullable = false)
+    private Boolean isEmailVerified = false;
+
+    @Column(name = "is_phone_verified", nullable = false)
+    private Boolean isPhoneVerified = false;
+
+    @Column(name = "google_id")
+    private String googleId;
+
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    
-    @Column(name = "last_login")
-    private LocalDateTime lastLogin;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private UserRole role = UserRole.WAREHOUSE_OWNER;
+
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Warehouse> warehouses = new HashSet<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-    
-    public enum AuthProvider {
-        LOCAL, GOOGLE
+
+    public enum UserRole {
+        WAREHOUSE_OWNER, MANAGER, EMPLOYEE, ADMIN
     }
 }
