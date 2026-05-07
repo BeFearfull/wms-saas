@@ -1,20 +1,17 @@
 package com.wms.entity;
 
+import lombok.*;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "purchases", indexes = {
-    @Index(name = "idx_warehouse_id", columnList = "warehouse_id"),
-    @Index(name = "idx_supplier_id", columnList = "supplier_id")
+    @Index(name = "idx_purchase_warehouse", columnList = "warehouse_id"),
+    @Index(name = "idx_purchase_supplier", columnList = "supplier_id"),
+    @Index(name = "idx_purchase_status", columnList = "status")
 })
 @Data
 @NoArgsConstructor
@@ -23,8 +20,8 @@ import java.util.UUID;
 public class Purchase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = false)
@@ -34,63 +31,58 @@ public class Purchase {
     @JoinColumn(name = "supplier_id", nullable = false)
     private Company supplier;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "po_number", nullable = false, unique = true)
     private String poNumber; // Purchase Order Number
 
+    @Column(name = "total_quantity", nullable = false)
+    private Double totalQuantity;
+
+    @Column(name = "total_amount_inr", nullable = false)
+    private Double totalAmountINR; // In Indian Rupees
+
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PurchaseStatus status;
+    private PurchaseStatus status = PurchaseStatus.PENDING;
 
-    @Column(nullable = false)
-    private LocalDateTime orderDate;
+    @Column(name = "expected_delivery_date")
+    private LocalDate expectedDeliveryDate;
 
-    @Column(nullable = false)
-    private LocalDateTime expectedDeliveryDate;
+    @Column(name = "actual_delivery_date")
+    private LocalDate actualDeliveryDate;
 
-    private LocalDateTime actualDeliveryDate;
+    @Column(name = "received_quantity")
+    private Double receivedQuantity = 0.0;
 
-    @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalAmount;
+    @Column(name = "purchase_date", nullable = false)
+    private LocalDate purchaseDate;
 
-    @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal gstAmount;
-
-    @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal netAmount;
-
-    @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal paidAmount;
-
-    private String invoiceNumber;
-    private LocalDateTime invoiceDate;
-
-    private String transporterName;
-    private String transporterPhone;
-    private String transporterAddress;
-    private String awbNumber; // Air Waybill Number
-
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
-    @OneToMany(mappedBy = "purchase", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PurchaseItem> items;
+    @Column(name = "created_by")
+    private Long createdBy; // User ID
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "purchase", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Delivery> deliveries = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (status == null) {
-            status = PurchaseStatus.PENDING;
-        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public enum PurchaseStatus {
+        PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED, PARTIAL
     }
 }

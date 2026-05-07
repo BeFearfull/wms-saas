@@ -1,20 +1,15 @@
 package com.wms.entity;
 
+import lombok.*;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "sales", indexes = {
-    @Index(name = "idx_warehouse_id", columnList = "warehouse_id"),
-    @Index(name = "idx_customer_id", columnList = "customer_id")
+    @Index(name = "idx_sale_warehouse", columnList = "warehouse_id"),
+    @Index(name = "idx_sale_customer", columnList = "customer_id"),
+    @Index(name = "idx_sale_status", columnList = "status")
 })
 @Data
 @NoArgsConstructor
@@ -23,8 +18,8 @@ import java.util.UUID;
 public class Sale {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = false)
@@ -34,62 +29,52 @@ public class Sale {
     @JoinColumn(name = "customer_id", nullable = false)
     private Company customer;
 
-    @Column(nullable = false, unique = true)
-    private String soNumber; // Sales Order Number
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SaleStatus status;
-
-    @Column(nullable = false)
-    private LocalDateTime orderDate;
-
-    @Column(nullable = false)
-    private LocalDateTime expectedDeliveryDate;
-
-    private LocalDateTime actualDeliveryDate;
-
-    @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalAmount;
-
-    @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal gstAmount;
-
-    @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal netAmount;
-
-    @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal paidAmount;
-
+    @Column(name = "invoice_number", nullable = false, unique = true)
     private String invoiceNumber;
-    private LocalDateTime invoiceDate;
 
-    private String transporterName;
-    private String transporterPhone;
-    private String awbNumber;
+    @Column(name = "total_quantity", nullable = false)
+    private Double totalQuantity;
 
+    @Column(name = "total_amount_inr", nullable = false)
+    private Double totalAmountINR; // In Indian Rupees
+
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SaleStatus status = SaleStatus.PENDING;
+
+    @Column(name = "sale_date", nullable = false)
+    private LocalDate saleDate;
+
+    @Column(name = "delivery_date")
+    private LocalDate deliveryDate;
+
+    @Column(name = "shipped_quantity")
+    private Double shippedQuantity = 0.0;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
-    @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SaleItem> items;
+    @Column(name = "created_by")
+    private Long createdBy; // User ID
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (status == null) {
-            status = SaleStatus.PENDING;
-        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public enum SaleStatus {
+        PENDING, CONFIRMED, DISPATCHED, DELIVERED, CANCELLED, PARTIAL
     }
 }
