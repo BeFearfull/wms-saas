@@ -1,24 +1,22 @@
 package com.wms.repository;
 
 import com.wms.entity.InventoryTransaction;
-import com.wms.entity.TransactionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface InventoryTransactionRepository extends JpaRepository<InventoryTransaction, UUID> {
-    List<InventoryTransaction> findByWarehouseId(UUID warehouseId);
-    List<InventoryTransaction> findByProductId(UUID productId);
-    List<InventoryTransaction> findByWarehouseIdAndProductId(UUID warehouseId, UUID productId);
-    Page<InventoryTransaction> findByWarehouseId(UUID warehouseId, Pageable pageable);
-    List<InventoryTransaction> findByProductIdAndType(UUID productId, TransactionType type);
-    List<InventoryTransaction> findByWarehouseIdAndTransactionDateBetween(
-        UUID warehouseId, LocalDateTime startDate, LocalDateTime endDate
-    );
+public interface InventoryTransactionRepository extends JpaRepository<InventoryTransaction, Long> {
+    List<InventoryTransaction> findByProductId(Long productId);
+    List<InventoryTransaction> findByWarehouseId(Long warehouseId);
+    @Query("SELECT it FROM InventoryTransaction it WHERE it.warehouse.id = ?1 ORDER BY it.transactionDate DESC")
+    Page<InventoryTransaction> findByWarehouseIdOrderByDateDesc(Long warehouseId, Pageable pageable);
+    @Query("SELECT it FROM InventoryTransaction it WHERE it.product.id = ?1 ORDER BY it.transactionDate DESC")
+    List<InventoryTransaction> findByProductIdOrderByDateDesc(Long productId);
+    @Query("SELECT it FROM InventoryTransaction it WHERE it.warehouse.id = ?1 AND it.transactionDate BETWEEN ?2 AND ?3")
+    List<InventoryTransaction> findByWarehouseAndDateRange(Long warehouseId, LocalDateTime startDate, LocalDateTime endDate);
 }

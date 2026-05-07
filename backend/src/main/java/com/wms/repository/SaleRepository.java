@@ -1,25 +1,21 @@
 package com.wms.repository;
 
 import com.wms.entity.Sale;
-import com.wms.entity.SaleStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
-public interface SaleRepository extends JpaRepository<Sale, UUID> {
-    List<Sale> findByWarehouseId(UUID warehouseId);
-    Optional<Sale> findByIdAndWarehouseId(UUID id, UUID warehouseId);
-    Page<Sale> findByWarehouseId(UUID warehouseId, Pageable pageable);
-    List<Sale> findByWarehouseIdAndStatus(UUID warehouseId, SaleStatus status);
-    List<Sale> findByWarehouseIdAndOrderDateBetween(
-        UUID warehouseId, LocalDateTime startDate, LocalDateTime endDate
-    );
-    Optional<Sale> findBySoNumber(String soNumber);
+public interface SaleRepository extends JpaRepository<Sale, Long> {
+    Optional<Sale> findByInvoiceNumber(String invoiceNumber);
+    List<Sale> findByWarehouseId(Long warehouseId);
+    List<Sale> findByCustomerId(Long customerId);
+    @Query("SELECT s FROM Sale s WHERE s.warehouse.id = ?1 ORDER BY s.saleDate DESC")
+    Page<Sale> findByWarehouseIdOrderByDateDesc(Long warehouseId, Pageable pageable);
+    @Query("SELECT s FROM Sale s WHERE s.warehouse.id = ?1 AND s.status = ?2")
+    List<Sale> findByWarehouseAndStatus(Long warehouseId, Sale.SaleStatus status);
 }
