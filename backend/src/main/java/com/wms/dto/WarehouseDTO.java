@@ -1,32 +1,26 @@
 package com.wms.dto;
 
-import com.wms.entity.WarehouseType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class WarehouseDTO {
-    private UUID id;
+    private Long id;
     private String name;
-    private String description;
     private String location;
+    private String warehouseType;
     private String city;
     private String state;
-    private String pincode;
-    private WarehouseType type;
-    private String contactPerson;
+    private String postalCode;
+    private String country;
+    private String contactPersonName;
     private String contactPhone;
     private String contactEmail;
-    private Double area;
-    private Boolean active;
+    private Boolean isActive;
+    private Double totalCapacity;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

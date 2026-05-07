@@ -1,29 +1,24 @@
 package com.wms.dto;
 
-import com.wms.entity.UserRole;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserDTO {
-    private UUID id;
+    private Long id;
     private String email;
-    private String phone;
+    private String phoneNumber;
     private String firstName;
     private String lastName;
-    private String profileImage;
-    private UserRole role;
-    private Boolean emailVerified;
-    private Boolean phoneVerified;
-    private Boolean active;
+    private String profilePictureUrl;
+    private Boolean isActive;
+    private Boolean isEmailVerified;
+    private Boolean isPhoneVerified;
+    private String role;
+    private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
