@@ -1,11 +1,11 @@
 spring:
+  profiles: dev
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
-
   datasource:
-    url: jdbc:postgresql://localhost:5432/wms_dev_db
+    url: jdbc:postgresql://localhost:5432/wms_saas_dev
     username: postgres
     password: postgres
 
@@ -13,6 +13,5 @@ logging:
   level:
     root: INFO
     com.wms: DEBUG
+    org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

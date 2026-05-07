@@ -1,7 +1,8 @@
 spring:
   application:
-    name: wms-saas-backend
-
+    name: wms-saas
+  profiles:
+    active: dev
   jpa:
     hibernate:
       ddl-auto: validate
@@ -9,76 +10,99 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        use_sql_comments: true
-        jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
-
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
-    url: jdbc:postgresql://localhost:5432/wms_db
-    username: postgres
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:wms_saas}
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
+    driver-class-name: ${DB_DRIVER_CLASS:org.postgresql.Driver}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
-      connection-timeout: 20000
-      idle-timeout: 300000
-
-  jackson:
-    default-property-inclusion: non_null
-    serialization:
-      write-dates-as-timestamps: false
-    time-zone: Asia/Kolkata
-
+      connection-timeout: 30000
+  security:
+    user:
+      name: admin
+      password: admin123
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
+            required: true
   servlet:
     multipart:
       max-file-size: 10MB
-      max-request-size: 20MB
+      max-request-size: 10MB
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
-    context-path: /
-  shutdown: graceful
-  compression:
-    enabled: true
-    min-response-size: 1024
+    context-path: ${SERVER_SERVLET_CONTEXT_PATH:/api/v1}
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
 
 jwt:
-  secret: ${JWT_SECRET:your-secret-key-must-be-at-least-32-characters-long-for-security}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: ${JWT_SECRET_KEY:your-super-secret-jwt-key-change-this-in-production-min-32-chars}
+  expiration: ${JWT_EXPIRATION_MS:86400000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION_MS:604800000}
 
 google:
-  client:
-    id: ${GOOGLE_CLIENT_ID:}
-    secret: ${GOOGLE_CLIENT_SECRET:}
+  client-id: ${GOOGLE_CLIENT_ID}
+  client-secret: ${GOOGLE_CLIENT_SECRET}
+  redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/google/callback}
+
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN}
+  phone-number: ${TWILIO_PHONE_NUMBER}
+
+aws:
+  region: ${AWS_REGION:ap-south-1}
+  s3:
+    bucket: ${AWS_S3_BUCKET:wms-saas-bucket}
 
 app:
-  name: WMS SaaS
-  version: 1.0.0
-  timezone: Asia/Kolkata
-  currency: INR
-  locale: en_IN
+  name: ${APP_NAME:WMS SaaS}
+  version: ${APP_VERSION:1.0.0}
+  timezone: ${APP_TIMEZONE:Asia/Kolkata}
+  currency: ${APP_CURRENCY:INR}
+  language: ${APP_LANGUAGE:en}
+  environment: ${APP_ENVIRONMENT:development}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+  allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS,PATCH}
+  allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+  max-age: ${CORS_MAX_AGE:3600}
 
 logging:
   level:
-    root: INFO
-    com.wms: DEBUG
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    com.wms: ${LOGGING_LEVEL_COM_WMS:DEBUG}
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,metrics,prometheus
-  endpoint:
-    health:
-      show-details: when-authorized
-  metrics:
-    export:
-      prometheus:
-        enabled: true
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  requests: ${RATE_LIMIT_REQUESTS:100}
+  duration-minutes: ${RATE_LIMIT_DURATION_MINUTES:1}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
